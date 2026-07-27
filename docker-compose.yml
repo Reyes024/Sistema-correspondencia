@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./docker/php
+    container_name: correspondencia_app
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - correspondencia_net
+    working_dir: /var/www/html
+
+  db:
+    image: postgres:15
+    container_name: correspondencia_db
+    restart: always
+    environment:
+      POSTGRES_DB: correspondencia
+      POSTGRES_USER: correspondencia_user
+      POSTGRES_PASSWORD: correspondencia_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - correspondencia_net
+
+  frontend:
+    image: node:20
+    container_name: correspondencia_frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host"
+    networks:
+      - correspondencia_net
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: correspondencia_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@correspondencia.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - correspondencia_net
+
+networks:
+  correspondencia_net:
+    driver: bridge
+
+volumes:
+  db_data:

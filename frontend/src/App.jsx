@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Correspondencias from './pages/Correspondencias';
 import NuevaCorrespondencia from './pages/NuevaCorrespondencia';
+import DetalleCorrespondencia from './pages/DetalleCorrespondencia';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="/dashboard" element={<RutaProtegida><Dashboard /></RutaProtegida>} />
           <Route path="/correspondencias" element={<RutaProtegida><Correspondencias /></RutaProtegida>} />
           <Route path="/correspondencias/nueva" element={<RutaProtegida><NuevaCorrespondencia /></RutaProtegida>} />
+          <Route path="/correspondencias/:id" element={<RutaProtegida><DetalleCorrespondencia /></RutaProtegida>} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </AuthProvider>

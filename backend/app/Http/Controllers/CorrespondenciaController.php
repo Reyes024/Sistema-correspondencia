@@ -27,7 +27,7 @@ class CorrespondenciaController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        $correspondencias = $query->orderByDesc('created_at')->get();
+        $correspondencias = $query->orderByDesc('created_at')->paginate(20);
 
         return response()->json($correspondencias);
     }

@@ -4,6 +4,9 @@ import api from '../api/axios';
 
 export default function Correspondencias() {
   const [lista, setLista] = useState([]);
+  const [pagina, setPagina] = useState(1);
+  const [ultimaPagina, setUltimaPagina] = useState(1);
+  const [total, setTotal] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [buscar, setBuscar] = useState('');
@@ -11,17 +14,24 @@ export default function Correspondencias() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    cargarLista();
+    setPagina(1);
   }, [buscar, estado]);
 
+  useEffect(() => {
+    cargarLista();
+  }, [buscar, estado, pagina]);
+
   async function cargarLista() {
+    setCargando(true);
     try {
-      const params = {};
+      const params = { page: pagina };
       if (buscar) params.buscar = buscar;
       if (estado) params.estado = estado;
 
       const response = await api.get('/correspondencias', { params });
-      setLista(response.data);
+      setLista(response.data.data);
+      setUltimaPagina(response.data.last_page);
+      setTotal(response.data.total);
     } catch (err) {
       setError('No se pudo cargar la lista de correspondencia');
     } finally {
@@ -72,54 +82,78 @@ export default function Correspondencias() {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {!cargando && !error && (
-        <table style={styles.tabla}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Folio</th>
-              <th style={styles.th}>Fecha</th>
-              <th style={styles.th}>Remitente</th>
-              <th style={styles.th}>Asunto</th>
-              <th style={styles.th}>Estado</th>
-              <th style={styles.th}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lista.length === 0 && (
+        <>
+          <table style={styles.tabla}>
+            <thead>
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
-                  No hay correspondencia registrada
-                </td>
+                <th style={styles.th}>Folio</th>
+                <th style={styles.th}>Fecha</th>
+                <th style={styles.th}>Remitente</th>
+                <th style={styles.th}>Asunto</th>
+                <th style={styles.th}>Estado</th>
+                <th style={styles.th}>Acciones</th>
               </tr>
-            )}
-            {lista.map((item) => (
-              <tr key={item.id}>
-                <td style={styles.td}>{item.folio}</td>
-                <td style={styles.td}>{new Date(item.fecha_recepcion).toLocaleDateString()}</td>
-                <td style={styles.td}>{item.remitente_nombre}</td>
-                <td style={styles.td}>{item.asunto}</td>
-                <td style={styles.td}>
-                  <span style={{
-                    ...styles.badge,
-                    backgroundColor: item.estado === 'DISTRIBUIDO' ? '#d1fae5' : '#fef3c7',
-                    color: item.estado === 'DISTRIBUIDO' ? '#065f46' : '#92400e',
-                  }}>
-                    {item.estado}
-                  </span>
-                </td>
-                <td style={styles.td}>
-                  <button onClick={() => navigate(`/correspondencias/${item.id}`)} style={styles.accionBtn}>
-                    Ver
-                  </button>
-                  {item.estado === 'REGISTRADO' && (
-                    <button onClick={() => handleDistribuir(item.id)} style={styles.accionBtnVerde}>
-                      Distribuir
+            </thead>
+            <tbody>
+              {lista.length === 0 && (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                    No hay correspondencia registrada
+                  </td>
+                </tr>
+              )}
+              {lista.map((item) => (
+                <tr key={item.id}>
+                  <td style={styles.td}>{item.folio}</td>
+                  <td style={styles.td}>{new Date(item.fecha_recepcion).toLocaleDateString()}</td>
+                  <td style={styles.td}>{item.remitente_nombre}</td>
+                  <td style={styles.td}>{item.asunto}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.badge,
+                      backgroundColor: item.estado === 'DISTRIBUIDO' ? '#d1fae5' : '#fef3c7',
+                      color: item.estado === 'DISTRIBUIDO' ? '#065f46' : '#92400e',
+                    }}>
+                      {item.estado}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    <button onClick={() => navigate(`/correspondencias/${item.id}`)} style={styles.accionBtn}>
+                      Ver
                     </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    {item.estado === 'REGISTRADO' && (
+                      <button onClick={() => handleDistribuir(item.id)} style={styles.accionBtnVerde}>
+                        Distribuir
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div style={styles.paginacion}>
+            <span style={styles.paginacionTexto}>
+              Página {pagina} de {ultimaPagina} · {total} registros
+            </span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setPagina((p) => p - 1)}
+                disabled={pagina <= 1}
+                style={{ ...styles.paginacionBtn, opacity: pagina <= 1 ? 0.5 : 1 }}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPagina((p) => p + 1)}
+                disabled={pagina >= ultimaPagina}
+                style={{ ...styles.paginacionBtn, opacity: pagina >= ultimaPagina ? 0.5 : 1 }}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -127,11 +161,8 @@ export default function Correspondencias() {
 
 const styles = {
   container: {
-    fontFamily: 'Arial, sans-serif',
-    padding: '30px',
-    backgroundColor: '#f4f6f8',
-    minHeight: '100vh',
-    colorScheme: 'light',
+    fontFamily: 'Arial, sans-serif', padding: '30px', backgroundColor: '#f4f6f8',
+    minHeight: '100vh', colorScheme: 'light',
   },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   titulo: { margin: 0, fontSize: '24px', color: '#1a1a1a' },
@@ -164,5 +195,13 @@ const styles = {
   accionBtnVerde: {
     padding: '6px 12px', backgroundColor: '#10b981', color: '#fff', border: 'none',
     borderRadius: '4px', cursor: 'pointer', fontSize: '13px',
+  },
+  paginacion: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px',
+  },
+  paginacionTexto: { fontSize: '13px', color: '#666' },
+  paginacionBtn: {
+    padding: '8px 16px', backgroundColor: '#fff', border: '1px solid #ccc',
+    borderRadius: '4px', cursor: 'pointer', fontSize: '13px', color: '#1a1a1a',
   },
 };

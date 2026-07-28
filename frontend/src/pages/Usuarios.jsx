@@ -4,6 +4,9 @@ import api from '../api/axios';
 
 export default function Usuarios() {
   const [lista, setLista] = useState([]);
+  const [pagina, setPagina] = useState(1);
+  const [ultimaPagina, setUltimaPagina] = useState(1);
+  const [total, setTotal] = useState(0);
   const [reporte, setReporte] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
@@ -12,12 +15,17 @@ export default function Usuarios() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    cargarDatos();
+    setPagina(1);
   }, [rol, estado]);
 
+  useEffect(() => {
+    cargarDatos();
+  }, [rol, estado, pagina]);
+
   async function cargarDatos() {
+    setCargando(true);
     try {
-      const params = {};
+      const params = { page: pagina };
       if (rol) params.rol = rol;
       if (estado) params.estado = estado;
 
@@ -25,7 +33,9 @@ export default function Usuarios() {
         api.get('/usuarios', { params }),
         api.get('/usuarios/reporte'),
       ]);
-      setLista(resLista.data);
+      setLista(resLista.data.data);
+      setUltimaPagina(resLista.data.last_page);
+      setTotal(resLista.data.total);
       setReporte(resReporte.data);
     } catch (err) {
       setError('No se pudo cargar la lista de usuarios');
@@ -95,49 +105,73 @@ export default function Usuarios() {
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {!cargando && !error && (
-        <table style={styles.tabla}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Nombre</th>
-              <th style={styles.th}>Correo</th>
-              <th style={styles.th}>Rol</th>
-              <th style={styles.th}>Estado</th>
-              <th style={styles.th}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {lista.length === 0 && (
+        <>
+          <table style={styles.tabla}>
+            <thead>
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
-                  No hay usuarios registrados
-                </td>
+                <th style={styles.th}>Nombre</th>
+                <th style={styles.th}>Correo</th>
+                <th style={styles.th}>Rol</th>
+                <th style={styles.th}>Estado</th>
+                <th style={styles.th}>Acciones</th>
               </tr>
-            )}
-            {lista.map((u) => (
-              <tr key={u.id}>
-                <td style={styles.td}>{u.name}</td>
-                <td style={styles.td}>{u.email}</td>
-                <td style={styles.td}>{u.rol}</td>
-                <td style={styles.td}>
-                  <span style={{
-                    ...styles.badge,
-                    backgroundColor: u.estado === 'ACTIVO' ? '#d1fae5' : '#fee2e2',
-                    color: u.estado === 'ACTIVO' ? '#065f46' : '#991b1b',
-                  }}>
-                    {u.estado}
-                  </span>
-                </td>
-                <td style={styles.td}>
-                  {u.estado === 'ACTIVO' && (
-                    <button onClick={() => handleBaja(u.id)} style={styles.accionBtnRojo}>
-                      Dar de baja
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {lista.length === 0 && (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: '#999' }}>
+                    No hay usuarios registrados
+                  </td>
+                </tr>
+              )}
+              {lista.map((u) => (
+                <tr key={u.id}>
+                  <td style={styles.td}>{u.name}</td>
+                  <td style={styles.td}>{u.email}</td>
+                  <td style={styles.td}>{u.rol}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.badge,
+                      backgroundColor: u.estado === 'ACTIVO' ? '#d1fae5' : '#fee2e2',
+                      color: u.estado === 'ACTIVO' ? '#065f46' : '#991b1b',
+                    }}>
+                      {u.estado}
+                    </span>
+                  </td>
+                  <td style={styles.td}>
+                    {u.estado === 'ACTIVO' && (
+                      <button onClick={() => handleBaja(u.id)} style={styles.accionBtnRojo}>
+                        Dar de baja
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div style={styles.paginacion}>
+            <span style={styles.paginacionTexto}>
+              Página {pagina} de {ultimaPagina} · {total} registros
+            </span>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setPagina((p) => p - 1)}
+                disabled={pagina <= 1}
+                style={{ ...styles.paginacionBtn, opacity: pagina <= 1 ? 0.5 : 1 }}
+              >
+                Anterior
+              </button>
+              <button
+                onClick={() => setPagina((p) => p + 1)}
+                disabled={pagina >= ultimaPagina}
+                style={{ ...styles.paginacionBtn, opacity: pagina >= ultimaPagina ? 0.5 : 1 }}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -181,5 +215,13 @@ const styles = {
   accionBtnRojo: {
     padding: '6px 12px', backgroundColor: '#dc2626', color: '#fff', border: 'none',
     borderRadius: '4px', cursor: 'pointer', fontSize: '13px',
+  },
+  paginacion: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px',
+  },
+  paginacionTexto: { fontSize: '13px', color: '#666' },
+  paginacionBtn: {
+    padding: '8px 16px', backgroundColor: '#fff', border: '1px solid #ccc',
+    borderRadius: '4px', cursor: 'pointer', fontSize: '13px', color: '#1a1a1a',
   },
 };

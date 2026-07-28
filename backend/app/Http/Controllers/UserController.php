@@ -22,7 +22,7 @@ class UserController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        $usuarios = $query->orderByDesc('created_at')->get();
+        $usuarios = $query->orderByDesc('created_at')->paginate(20);
 
         return response()->json($usuarios);
     }

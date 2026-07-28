@@ -24,4 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/usuarios', [UserController::class, 'store']);
     Route::put('/usuarios', [UserController::class, 'update']);
     Route::delete('/usuarios/{user}', [UserController::class, 'destroy']);
+
+    Route::get('/areas', function () {
+        return response()->json(\App\Models\Area::all());
+    });
 });

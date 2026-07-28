@@ -42,7 +42,12 @@ export default function Dashboard() {
           <h1 style={styles.titulo}>Dashboard</h1>
           <p style={styles.subtitulo}>Bienvenido, {user?.name} ({user?.rol})</p>
         </div>
-        <button onClick={handleLogout} style={styles.logoutBtn}>Cerrar Sesión</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => navigate('/correspondencias')} style={styles.verBtn}>
+            Ver Correspondencia
+          </button>
+          <button onClick={handleLogout} style={styles.logoutBtn}>Cerrar Sesión</button>
+        </div>
       </header>
 
       <div style={styles.cards}>
@@ -101,6 +106,14 @@ const styles = {
   },
   titulo: { margin: 0, fontSize: '24px', color: '#1a1a1a' },
   subtitulo: { margin: '5px 0 0 0', color: '#666', fontSize: '14px' },
+  verBtn: {
+    padding: '10px 18px',
+    backgroundColor: '#2563eb',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
   logoutBtn: {
     padding: '10px 18px',
     backgroundColor: '#dc2626',

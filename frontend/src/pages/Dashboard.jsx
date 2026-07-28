@@ -46,6 +46,12 @@ export default function Dashboard() {
           <button onClick={() => navigate('/correspondencias')} style={styles.verBtn}>
             Ver Correspondencia
           </button>
+          <button onClick={() => navigate('/usuarios')} style={styles.verBtn}>
+            Gestión de Usuarios
+          </button>
+          <button onClick={() => navigate('/perfil')} style={styles.verBtn}>
+            Mi Perfil
+          </button>
           <button onClick={handleLogout} style={styles.logoutBtn}>Cerrar Sesión</button>
         </div>
       </header>
